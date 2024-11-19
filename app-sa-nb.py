@@ -1,24 +1,36 @@
-import pickle
+
 import streamlit as st
-from sklearn.pipeline import Pipeline
-from sklearn.feature_extraction.text import TfidfVectorizer
+from transformers import pipeline
 
-
-# Load the saved model
-with open('sentiment_pipeline_model.pkl', 'rb') as file:
-    loaded_model = pickle.load(file)
+# Load the sentiment analysis model
+model_name = "poom-sci/WangchanBERTa-finetuned-sentiment"
+sentiment_analyzer = pipeline('sentiment-analysis', model=model_name)
 
 # Streamlit app
-st.title("Sentiment Analysis")
+st.title("Thai Sentiment Analysis App")
 
-# Input box for user to type a sentence
-user_input = st.text_input("Enter a sentece:")
+# Input text
+text_input = st.text_area("Enter Thai text for sentiment analysis", "ขอความเห็นหน่อย... ")
 
-#Predict sentiment when user submits input
-if st.button("Predict Sentiment"):
-    if user_input:
-        prediction = loaded_model.predict([user_input])
-        sentiment = "Positive" if prediction[0] == 1 else "Negative"
-        st.write(f"Predicted Sentiment: {sentiment}")
+# Button to trigger analysis
+if st.button("Analyze Sentiment"):
+    # Analyze sentiment using the model
+    results = sentiment_analyzer([text_input])
+
+    # Extract sentiment and score
+    sentiment = results[0]['label']
+    score = results[0]['score']
+
+
+    # Display result as progress bars
+    st.subheader("Sentiment Analysis Result:")
+
+    if sentiment == 'pos':
+        st.success(f"Positive Sentiment (Score: {score:.2f})")
+        st.progress(score)
+    elif sentiment == 'neg':
+        st.error(f"Negative Sentiment (Score: {score:.2f})")
+        st.progress(score)
     else:
-        st.write("Please enter a sentence to analyze .")
+        st.warning(f"Neutral Sentiment (Score: {score:.2f})")
+        st.progress(score)
